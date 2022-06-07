@@ -98,3 +98,48 @@ FROM Customer AS c
 		ON cas.AddressID = ash.AddressID
 WHERE ab.city = 'Dallas'
 
+--For each order show the SalesOrderID and SubTotal calculated three ways:
+--A) From the SalesOrderHeader
+--B) Sum of OrderQty*UnitPrice
+--C) Sum of OrderQty*ListPrice
+SELECT soh.SalesOrderID, SUM(soh.SubTotal) AS SubTotal, SUM(sod.OrderQty * sod.UnitPrice) AS OrderUnitPrice, SUM(sod.OrderQty * p.ListPrice) AS OrderListPrice
+FROM SalesOrderHeader AS soh
+	JOIN SalesOrderDetail AS sod
+		ON soh.SalesOrderID = sod.SalesOrderID
+	JOIN Product AS p
+		ON sod.ProductID = p.ProductID
+GROUP BY soh.SalesOrderID
+ORDER BY soh.SalesOrderID
+
+--Show the best selling item by value.
+SELECT p.Name AS ProductName, SUM(sod.OrderQty) AS TotalOrderQty
+FROM SalesOrderDetail AS sod
+JOIN Product AS p
+ON sod.ProductID = p.ProductID
+GROUP BY p.Name
+ORDER BY TotalOrderQty DESC
+
+--Show how many orders are in the following ranges (in $):
+SELECT '0- 99' AS RANGE, COUNT(*) AS [Num Orders], SUM(soh.SubTotal) AS [Total Value]
+FROM SalesOrderHeader AS soh
+WHERE soh.SubTotal Between 0 AND 99
+
+UNION ALL
+
+SELECT '100- 999' AS RANGE, COUNT(*) AS [Num Orders], SUM(soh.SubTotal) AS [Total Value]
+FROM SalesOrderHeader AS soh
+WHERE soh.SubTotal Between 100 AND 999
+
+UNION ALL
+
+SELECT '1000- 9999' AS RANGE, COUNT(*) AS [Num Orders], SUM(soh.SubTotal) AS [Total Value]
+FROM SalesOrderHeader AS soh
+WHERE soh.SubTotal Between 1000 AND 9999
+
+UNION ALL
+
+SELECT '10000-' AS RANGE, COUNT(*) AS [Num Orders], SUM(soh.SubTotal) AS [Total Value]
+FROM SalesOrderHeader AS soh
+WHERE soh.SubTotal >= 10000
+
+
